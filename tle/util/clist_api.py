@@ -1,7 +1,7 @@
 import logging
 import os
 import datetime as dt
-from tle.util.codeforces_api_self import RatingChange, make_from_dict, Contest as CfContest
+from tle.util.codeforces_api import RatingChange, make_from_dict, Contest as CfContest
 import requests
 import json
 

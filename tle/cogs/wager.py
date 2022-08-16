@@ -6,7 +6,7 @@ from discord.ext import commands
 from tle.util.clist_api import contest
 
 from tle.util.db.user_db_conn import Bet, BetWinner
-from tle.util import codeforces_api_self as cf
+from tle.util import codeforces_api as cf
 from tle.util import codeforces_common as cf_common
 from tle.util import discord_common
 from tle.util import table

@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from tle import constants
-from tle.util import codeforces_api_self as cf
+from tle.util import codeforces_api as cf
 from tle.util import codeforces_common as cf_common
 from tle.util import discord_common
 from tle.util.db import user_db_conn

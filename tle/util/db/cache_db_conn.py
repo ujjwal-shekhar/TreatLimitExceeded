@@ -1,7 +1,7 @@
 import json
 import sqlite3
 
-from tle.util import codeforces_api_self as cf
+from tle.util import codeforces_api as cf
 
 
 class CacheDbConn:

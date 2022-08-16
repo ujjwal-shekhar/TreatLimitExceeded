@@ -4,12 +4,12 @@ import discord
 from discord.ext import commands
 
 from tle.util import codeforces_common as cf_common
-from tle.util import codeforces_api_self as cf
+from tle.util import codeforces_api as cf
 from tle import constants
 from tle.util import discord_common
 from tle.cogs.handles import HandleCogError,_CLIST_RESOURCE_SHORT_FORMS,_SUPPORTED_CLIST_RESOURCES
 from tle.cogs.handles import CODECHEF_RATED_RANKS
-from tle.util.codeforces_api_self import RATED_RANKS as CODEFORCES_RATED_RANKS
+from tle.util.codeforces_api import RATED_RANKS as CODEFORCES_RATED_RANKS
 from discord.ext import commands
 
 async def _create_roles(ctx, ranks):
