@@ -12,7 +12,7 @@ import discord
 
 from tle import constants
 from tle.util import cache_system2
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 from tle.util import clist_api as clist
 from tle.util import db
 from tle.util import events

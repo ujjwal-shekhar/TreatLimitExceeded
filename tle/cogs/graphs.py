@@ -20,7 +20,7 @@ from matplotlib import dates as mdates
 from matplotlib.ticker import MultipleLocator
 
 from tle import constants
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 from tle.util import codeforces_common as cf_common
 from tle.util import clist_api as clist
 from tle.util import discord_common

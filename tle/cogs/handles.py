@@ -19,7 +19,7 @@ from discord.ext import commands
 
 from tle import constants
 from tle.util import cache_system2
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 from tle.util import clist_api as clist
 from tle.util import codeforces_common as cf_common
 from tle.util import discord_common
@@ -29,7 +29,7 @@ from tle.util import table
 from tle.util import tasks
 from tle.util import db
 from tle.util import scaper
-from tle.util.codeforces_api import Rank, rating2rank
+from tle.util.codeforces_api_self import Rank, rating2rank
 from tle import constants
 
 from discord.ext import commands

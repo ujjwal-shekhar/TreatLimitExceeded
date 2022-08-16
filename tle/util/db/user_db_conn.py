@@ -5,11 +5,16 @@ from typing import List
 
 from discord.ext import commands
 
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 
 from os import environ
 from firebase_admin import storage
 from tle import constants
+
+'''ujjwal-shekhar'''
+from tle.util.db import cache_db_conn as cdc
+'''ujjwal-shekhar'''
+
 bucket = None
 STORAGE_BUCKET = str(environ.get('STORAGE_BUCKET'))
 if STORAGE_BUCKET!='None':
@@ -36,6 +41,23 @@ class Winner(IntEnum):
     DRAW = 0
     CHALLENGER = 1
     CHALLENGEE = 2
+    
+'''ujjwal-shekhar'''
+
+class Bet(IntEnum):
+    PENDING = 0
+    ACCEPTED = 1
+    DECLINED = 2
+    EXPIRED = 3
+    COMPLETED = 4
+    INVALID = 5
+    
+class BetWinner(IntEnum):
+    UNDECIDED = 0
+    CHALLENGER = 1
+    CHALLENGEE = 2
+    
+'''ujjwal-shekhar'''
 
 class DuelType(IntEnum):
     UNOFFICIAL = 0
@@ -261,6 +283,25 @@ class UserDbConn:
             )
         ''')
 
+        '''ujjwal-shekhar'''
+        
+        
+        
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS wager_list (
+                user_id01 TEXT,
+                user_id02 TEXT,
+                handle01 TEXT,
+                handle02 TEXT,
+                contest_id INTEGER NOT NULL,
+                status INTEGER NOT NULL,
+                winner INTEGER NOT NULL
+            )                  
+        ''')
+        
+        
+        
+        '''ujjwal-shekhar'''
 
     # Helper functions.
 
@@ -1155,6 +1196,225 @@ class UserDbConn:
             return None
         account_id, = res
         return account_id
+    
+    '''ujjwal-shekhar'''
+    
+    def _clear_wager_list(self):
+        query = '''
+            DROP TABLE wager_list
+            CREATE TABLE IF NOT EXISTS wager_list (
+                user_id01 TEXT,
+                user_id02 TEXT,
+                handle01 TEXT,
+                handle02 TEXT,
+                contest_id INTEGER NOT NULL,
+                status INTEGER NOT NULL,
+                winner INTEGER NOT NULL
+            )
+        '''
+    
+    def insert_wager_challenge(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = '''
+            INSERT INTO wager_list 
+            (user_id01, user_id02, handle01, handle02, contest_id, status, winner)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        '''
+        with self.conn:
+            self.conn.execute(query,(user_id01, user_id02, handle01, handle02, contest_id, Bet.PENDING, BetWinner.UNDECIDED))
+        self.update()
+
+    def check_if_exists(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = '''
+            SELECT * FROM wager_list
+            WHERE user_id01 = ? AND user_id02 = ? AND handle01 = ? AND handle02 = ? AND contest_id = ? 
+        '''
+        
+        res = None
+        with self.conn:
+            res = self.conn.execute(query,(user_id01, user_id02, handle01, handle02, contest_id)).fetchone()
+        if(res is not None):
+            return True
+        return False
+    
+    def check_if_bet_pending(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            SELECT * FROM wager_list
+            WHERE
+                user_id01 = ? AND user_id02 = ? 
+                AND handle01 = ? AND handle02 = ? 
+                AND contest_id = ? AND status == {Bet.PENDING}
+        '''    
+        
+        return self.conn.execute(query,(user_id01,user_id02, handle01, handle02, contest_id)).fetchone()
+    
+    def check_if_bet_expired(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            SELECT * FROM wager_list
+            WHERE
+                user_id01 = ? AND user_id02 = ? 
+                AND handle01 = ? AND handle02 = ? 
+                AND contest_id = ? AND status == {Bet.EXPIRED}
+        '''    
+        
+        return self.conn.execute(query,(user_id01,user_id02, handle01, handle02, contest_id)).fetchone()
+    
+    def check_if_bet_invalidated(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            SELECT * FROM wager_list
+            WHERE
+                user_id01 = ? AND user_id02 = ? 
+                AND handle01 = ? AND handle02 = ? 
+                AND contest_id = ? AND status == {Bet.INVALID}
+        '''    
+        
+        return self.conn.execute(query,(user_id01,user_id02, handle01, handle02, contest_id)).fetchone()
+
+    def check_if_bet_accepted(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            SELECT * FROM wager_list
+            WHERE
+                user_id01 = ? AND user_id02 = ? 
+                AND handle01 = ? AND handle02 = ? 
+                AND contest_id = ? AND status == {Bet.ACCEPTED}
+        '''    
+        
+        return self.conn.execute(query,(user_id01,user_id02, handle01, handle02, contest_id)).fetchone()
+    
+    def check_if_bet_compeleted(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            SELECT * FROM wager_list
+            WHERE
+                user_id01 = ? AND user_id02 = ? 
+                AND handle01 = ? AND handle02 = ? 
+                AND contest_id = ? AND status == {Bet.COMPLETED}
+        '''    
+        
+        return self.conn.execute(query,(user_id01,user_id02, handle01, handle02, contest_id)).fetchone()
+    
+    
+    def set_bet_accepted(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            UPDATE wager_list 
+            SET status = {Bet.ACCEPTED}
+            WHERE 
+                user_id01 = ? AND user_id02 = ?
+                AND handle01 = ? AND handle02 = ?
+                AND contest_id = ?
+        '''
+        
+        with self.conn:
+            self.conn.execute(query,(user_id01,user_id02,handle01,handle02, contest_id))
+        self.conn.commit()
+        self.update()
+        
+    def set_bet_declined(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            UPDATE wager_list 
+            SET status = {Bet.DECLINED}
+            WHERE 
+                user_id01 = ? AND user_id02 = ?
+                AND handle01 = ? AND handle02 = ?
+                AND contest_id = ?
+        '''
+        
+        with self.conn:
+            self.conn.execute(query,(user_id01,user_id02,handle01,handle02, contest_id))
+        self.conn.commit()
+        self.update()
+        
+    def set_bet_invalid(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            UPDATE wager_list 
+            SET status = {Bet.INVALID}
+            WHERE 
+                user_id01 = ? AND user_id02 = ?
+                AND handle01 = ? AND handle02 = ?
+                AND contest_id = ?
+        '''
+        
+        with self.conn:
+            self.conn.execute(query,(user_id01,user_id02,handle01,handle02, contest_id))
+        self.conn.commit()
+        self.update()   
+        
+    def set_bet_expired(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            UPDATE wager_list 
+            SET status = {Bet.EXPIRED}
+            WHERE 
+                user_id01 = ? AND user_id02 = ?
+                AND handle01 = ? AND handle02 = ?
+                AND contest_id = ?
+        '''
+        
+        with self.conn:
+            self.conn.execute(query,(user_id01,user_id02,handle01,handle02, contest_id))
+        self.conn.commit()
+        self.update()
+    
+    def set_bet_completed(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+        query = f'''
+            UPDATE wager_list
+            SET status = {Bet.COMPLETED}
+            WHERE 
+                user_id01 = ? AND user_id02 = ?
+                AND handle01 = ? AND handle02 = ?
+                AND contest_id = ?
+        '''
+        
+        with self.conn:
+            self.conn.execute(query,(user_id01,user_id02,handle01,handle02, contest_id))
+        self.conn.commit()
+        self.update()
+        
+    # def set_bet_winner(self, user_id01:str, user_id02:str, handle01:str, handle02:str, contest_id:int):
+    #     winner_status = cdc,cdc.CacheDbConn.get_winner(contest_id, handle01, handle02)
+        
+    #     query = f'''
+    #         UPDATE wager_list
+    #         SET winner = {winner_status}
+    #         WHERE 
+    #             user_id01 = {user_id01} AND
+    #             user_id02 = {user_id02} AND
+    #             handle01 = {handle01} AND
+    #             handle02 = {handle02} AND
+    #             contest_id = {contest_id}
+    #     '''
+    #     with self.conn:
+    #         self.conn.execute(query)
+    #     self.conn.commit()
+    #     self.update()
+        
+    #     return winner_status
+        
+        
+    # def set_bet_winners(self, contest_id:int):
+    #     query = f'''
+    #         SELECT handle01, handle02
+    #         FROM wager_list
+    #         WHERE contest_id = {contest_id}
+    #     '''
+    #     res = self.conn.query(query).fetchall()
+
+    #     for tup in res:
+    #         query = f'''
+    #             UPDATE wager_list
+    #             SET winner = {cdc.CacheDbConn.get_winner(contest_id, tup['handle01'], tup['handle02'])}
+    #             WHERE 
+    #                 handle01 = {tup['handle01']} AND
+    #                 handle02 = {tup['handle02']} AND
+    #                 contest_id = {contest_id}
+    #         '''
+    #         with self.conn:
+    #             self.conn.execute(query)
+    #         self.conn.commit()
+    #         self.update()
+            
+        
+        
+        # SET WINNER routine
+
+    '''ujjwal-shekhar'''
     
     def ban_user(self, user_id):
         query = ('INSERT OR REPLACE INTO bans '

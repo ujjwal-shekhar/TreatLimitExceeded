@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 from tle import constants
 from tle.util.db.user_db_conn import Duel, DuelType, Winner
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 from tle.util import codeforces_common as cf_common
 from tle.util import paginator
 from tle.util import discord_common

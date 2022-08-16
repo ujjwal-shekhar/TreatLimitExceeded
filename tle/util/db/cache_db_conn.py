@@ -1,7 +1,7 @@
 import json
 import sqlite3
 
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 
 
 class CacheDbConn:
@@ -210,6 +210,46 @@ class CacheDbConn:
         query = 'SELECT 1 FROM problem2'
         res = self.conn.execute(query).fetchone()
         return res is None
+
+    # '''ujjwal-shekhar'''
+
+    # def check_contest_status(self, contest_id=None):
+    #     query=f'''
+    #         SELECT phase FROM contest
+    #         WHERE contest_id = {contest_id}
+    #     '''        
+    #     res = self.conn.execute(query).fetchone()
+        
+    #     return res
+    
+    # def get_winner(self, contest_id=None, handle01=None, handle02=None):
+    #     query = f'''
+    #         SELECT rank FROM rating_change
+    #         WHERE 
+    #             contest_id = {contest_id} 
+    #         AND handle = {handle01}
+    #     '''
+        
+    #     res1 = self.conn.execute(query).fetchone()
+        
+    #     query = f'''
+    #         SELECT rank FROM rating_change
+    #         WHERE 
+    #             contest_id = {contest_id} 
+    #         AND handle = {handle02}
+    #     '''
+    #     res2 = self.conn.execute(query).fetchone()
+        
+    #     if res1 is None and res2 is None:
+    #         return 0 #Bet.UNDECIDED
+    #     elif res1 is None or res1 > res2:
+    #         return 2 #Bet.CHALLENGEE
+    #     elif res2 is None or res2 > res1:
+    #         return 1 #Bet.CHALLENGER
+        
+        
+     
+    # '''ujjwal-shekhar'''
 
     def close(self):
         self.conn.close()

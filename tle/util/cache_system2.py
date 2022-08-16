@@ -7,7 +7,7 @@ from collections import defaultdict
 from discord.ext import commands
 
 from tle.util import codeforces_common as cf_common
-from tle.util import codeforces_api as cf
+from tle.util import codeforces_api_self as cf
 from tle.util import events
 from tle.util import tasks
 from tle.util import paginator
